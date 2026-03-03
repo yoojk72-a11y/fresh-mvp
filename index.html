@@ -5,15 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Fresh MVP</title>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0971EW0BKM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-0971EW0BKM');
-</script>
-
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111111">
 
@@ -26,8 +17,6 @@ body {
   margin: 0;
   padding: 16px;
 }
-
-h1 { font-size: 22px; }
 
 .card {
   background: white;
@@ -42,16 +31,30 @@ button {
   border: none;
   border-radius: 10px;
   font-size: 15px;
+  transition: all 0.15s ease;
 }
 
-.primary { background: #111; color: white; }
+button:active {
+  transform: scale(0.96);
+}
 
-.category button {
+.primary {
+  background: #111;
+  color: white;
+}
+
+.category button,
+.open-status button {
   background: #eee;
-  margin: 4px;
 }
 
-input, select {
+.category button.active,
+.open-status button.active {
+  background: #111;
+  color: white;
+}
+
+input {
   width: 100%;
   padding: 10px;
   margin: 6px 0;
@@ -66,45 +69,48 @@ input, select {
 <h1>🔥 Fresh</h1>
 
 <div class="card">
-  <h3>오늘 지킬 수 있는 금액</h3>
-  <p id="savingAmount">0원</p>
-</div>
-
-<div class="card">
   <h3>재료 등록</h3>
 
   <button class="primary" onclick="captureDate()">📷 유통기한 촬영</button>
   <p id="ocrMessage"></p>
 
-  <label>유통기한 수동 입력 (yymmdd)</label>
+  <!-- 🔥 숫자 직접 입력 -->
+  <label>유통기한 직접 입력 (yymmdd)</label>
   <input
     type="text"
-    id="manualDate"
-    placeholder="예: 250731"
+    id="manualDateText"
+    placeholder="예: 260304"
     maxlength="6"
     inputmode="numeric"
+  >
+
+  <!-- 🔥 달력 선택 -->
+  <label>또는 달력에서 선택</label>
+  <input
+    type="date"
+    id="manualDatePicker"
   >
 
   <input type="text" id="productName" placeholder="제품명 입력">
 
   <div class="category">
-    <button onclick="setCategory('유제품')">유제품</button>
-    <button onclick="setCategory('채소')">채소</button>
-    <button onclick="setCategory('육류')">육류</button>
-    <button onclick="setCategory('가공식품')">가공식품</button>
-    <button onclick="setCategory('과일')">과일</button>
+    <button onclick="setCategory('유제품', this)">유제품</button>
+    <button onclick="setCategory('채소', this)">채소</button>
+    <button onclick="setCategory('육류', this)">육류</button>
+    <button onclick="setCategory('가공식품', this)">가공식품</button>
+    <button onclick="setCategory('과일', this)">과일</button>
   </div>
 
-  <div>
-    <button onclick="setOpenStatus(false)">📦 개봉 전</button>
-    <button onclick="setOpenStatus(true)">🥣 개봉 후</button>
+  <div class="open-status">
+    <button onclick="setOpenStatus(false, this)">📦 개봉 전</button>
+    <button onclick="setOpenStatus(true, this)">🥣 개봉 후</button>
   </div>
 
   <button class="primary" onclick="saveItem()">저장</button>
 </div>
 
 <div class="card">
-  <h3>등록 목록</h3>
+  <h3>전체 목록</h3>
   <ul id="itemList"></ul>
 </div>
 
@@ -113,7 +119,7 @@ let selectedCategory = "";
 let isOpened = false;
 let ocrDate = "";
 
-// 날짜 정규화 (yy → 20yy)
+// yy → yyyy 변환
 function normalizeDate(dateStr) {
   let cleaned = dateStr.replace(/[./]/g, "-");
   let parts = cleaned.split("-");
@@ -125,7 +131,7 @@ function normalizeDate(dateStr) {
   return parts.join("-");
 }
 
-// 수동 입력 변환
+// yymmdd → yyyy-mm-dd
 function convertYYMMDD(input) {
   if (!/^\d{6}$/.test(input)) return null;
 
@@ -136,7 +142,6 @@ function convertYYMMDD(input) {
   return `20${yy}-${mm}-${dd}`;
 }
 
-// OCR 실행
 async function captureDate() {
   const input = document.createElement("input");
   input.type = "file";
@@ -156,34 +161,42 @@ async function captureDate() {
       ocrDate = normalizeDate(dateMatch[0]);
       document.getElementById("ocrMessage").innerText =
         "인식된 날짜: " + ocrDate;
-
-      gtag('event', 'ocr_success');
     } else {
       document.getElementById("ocrMessage").innerText =
-        "날짜를 찾지 못했습니다. 수동 입력해주세요.";
+        "날짜를 찾지 못했습니다. 직접 입력해주세요.";
     }
   };
 
   input.click();
 }
 
-function setCategory(cat) {
+function setCategory(cat, el) {
   selectedCategory = cat;
+  document.querySelectorAll(".category button")
+    .forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
 }
 
-function setOpenStatus(status) {
+function setOpenStatus(status, el) {
   isOpened = status;
+  document.querySelectorAll(".open-status button")
+    .forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
 }
 
 function saveItem() {
   const name = document.getElementById("productName").value.trim();
-  const manualRaw = document.getElementById("manualDate").value.trim();
+  const textInput = document.getElementById("manualDateText").value.trim();
+  const pickerInput = document.getElementById("manualDatePicker").value;
 
   let finalDate = ocrDate;
 
-  if (!finalDate && manualRaw) {
-    finalDate = convertYYMMDD(manualRaw);
-    gtag('event', 'manual_input_used');
+  if (!finalDate && textInput) {
+    finalDate = convertYYMMDD(textInput);
+  }
+
+  if (!finalDate && pickerInput) {
+    finalDate = pickerInput;
   }
 
   if (!name || !finalDate) {
@@ -202,13 +215,11 @@ function saveItem() {
   items.push(item);
   localStorage.setItem("freshItems", JSON.stringify(items));
 
-  gtag('event', 'ingredient_add');
-
   renderItems();
 
-  // 초기화
   document.getElementById("productName").value = "";
-  document.getElementById("manualDate").value = "";
+  document.getElementById("manualDateText").value = "";
+  document.getElementById("manualDatePicker").value = "";
   document.getElementById("ocrMessage").innerText = "";
   ocrDate = "";
 }
@@ -227,7 +238,6 @@ function renderItems() {
 
 renderItems();
 
-// service worker
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
