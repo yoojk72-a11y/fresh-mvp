@@ -8,19 +8,22 @@ if ("serviceWorker" in navigator) {
     const today = new Date();
   
     items.forEach(item => {
-  
+
       const expiry = new Date(item.expiryDate);
       const diffTime = expiry - today;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-      if (diffDays === 3) {
-        sendNotification("⏰ 유통기한 3일 남음", `${item.name} 사용 준비하세요`);
+    
+      if (diffDays <= item.notifyDays && !item.notified) {
+    
+        sendNotification(
+          "⏰ 유통기한 임박",
+          `${item.name} ${diffDays}일 남았습니다`
+        );
+    
+        item.notified = true;
+    
       }
-  
-      if (diffDays === 1) {
-        sendNotification("⚠️ 유통기한 하루 남음", `${item.name} 오늘 사용 권장`);
-      }
-  
+    
     });
   
   }
