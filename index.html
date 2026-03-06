@@ -272,7 +272,7 @@ if ("serviceWorker" in navigator) {
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-messaging.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCgMXr-TqIn3jzWNLyBMirtqqdS0JQZN4M",
@@ -297,9 +297,9 @@ getToken(messaging, {
 
   // 포그라운드 알림
   onMessage(messaging, (payload) => {
-    console.log("메시지 수신:", payload);
-    alert(payload.notification.title);
-  });
+  console.log("메시지 수신:", payload);
+  alert(payload.notification.title);
+});
 </script>
 
 </body>
