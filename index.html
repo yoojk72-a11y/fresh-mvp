@@ -266,8 +266,40 @@ function renderItems() {
 renderItems();
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+  navigator.serviceWorker.register("firebase-messaging-sw.js");
 }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCgMXr-TqIn3jzWNLyBMirtqqdS0JQZN4M",
+  authDomain: "fresh-mvp.firebaseapp.com",
+  projectId: "fresh-mvp",
+  storageBucket: "fresh-mvp.firebasestorage.app",
+  messagingSenderId: "274072468506",
+  appId: "1:274072468506:web:ae4a41e8a67217f5b9e5a3"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+getToken(messaging, {
+  vapidKey: "BC0tsGCS_Z8W8gOSd1D23r5bkylGdiMKoz4nJREpjP6kfETyKBTvz-fU9xAuprNq3XmK6Mz9UGvhK5M6EdG3VRM"
+}).then((currentToken) => {
+  console.log("🔥 FCM 토큰:", currentToken);
+}).catch((err) => {
+  console.error(err);
+});
+
+
+  // 포그라운드 알림
+  onMessage(messaging, (payload) => {
+    console.log("메시지 수신:", payload);
+    alert(payload.notification.title);
+  });
 </script>
 
 </body>
