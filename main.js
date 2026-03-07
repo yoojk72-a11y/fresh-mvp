@@ -7,6 +7,10 @@ if ("serviceWorker" in navigator) {
     const items = JSON.parse(localStorage.getItem("freshItems")) || [];
     const today = new Date();
   
+    items.sort((a, b) => {
+      return new Date(a.expiryDate) - new Date(b.expiryDate);
+     });
+
     items.forEach(item => {
 
       const expiry = new Date(item.expiryDate);
@@ -25,7 +29,8 @@ if ("serviceWorker" in navigator) {
       }
     
     });
-  
+   
+    localStorage.setItem("freshItems", JSON.stringify(items));
   }
 
   function sendNotification(title, body) {
