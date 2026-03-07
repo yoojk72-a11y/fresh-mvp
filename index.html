@@ -177,7 +177,6 @@ async function requestNotificationPermission() {
   }
 }
 
-requestNotificationPermission();
 
 // yy → yyyy 변환
 function normalizeDate(dateStr) {
@@ -333,8 +332,8 @@ else if (diffDays === 0) {
 else {
  status = diffDays + "일 남음";
 }
-const notifyDays =
-parseInt(document.getElementById("notifyDays").value || 0);
+const notifyEl = document.getElementById("notifyDays");
+const notifyDays = notifyEl ? parseInt(notifyEl.value) : 0;
 
 const notifyKey = "notified_" + item.name + "_" + item.date;
 
