@@ -169,6 +169,16 @@ let selectedCategory = "";
 let isOpened = false;
 let ocrDate = "";
 
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) return;
+
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+}
+
+requestNotificationPermission();
+
 // yy → yyyy 변환
 function normalizeDate(dateStr) {
   let cleaned = dateStr.replace(/[./]/g, "-");
@@ -227,6 +237,29 @@ function setCategory(cat, el) {
   el.classList.add("active");
 }
 
+function sendExpiryNotification(name, daysLeft) {
+
+if (Notification.permission !== "granted") return;
+
+let message = "";
+
+if (daysLeft < 0) {
+  message = "유통기한이 지났습니다";
+} 
+else if (daysLeft === 0) {
+  message = "오늘 유통기한입니다";
+} 
+else {
+  message = daysLeft + "일 후 유통기한입니다";
+}
+
+new Notification("Fresh 알림", {
+  body: name + " : " + message,
+  icon: "/icon-192.png"
+});
+
+}
+
 function setOpenStatus(status, el) {
   isOpened = status;
   document.querySelectorAll(".open-status button")
@@ -281,7 +314,39 @@ function renderItems() {
 
   items.forEach(item => {
     const li = document.createElement("li");
-    li.innerText = `${item.name} - ${item.date} (${item.category})`;
+    const today = new Date();
+const expiry = new Date(item.date);
+
+const diffDays = Math.ceil(
+ (expiry - today) / (1000 * 60 * 60 * 24)
+);
+
+let status = "";
+
+if (diffDays < 0) {
+ status = "❌ 유통기한 지남";
+}
+else if (diffDays === 0) {
+ status = "🔥 오늘 만료";
+}
+else {
+ status = diffDays + "일 남음";
+}
+const notifyDays =
+parseInt(document.getElementById("notifyDays").value || 0);
+
+const notifyKey = "notified_" + item.name + "_" + item.date;
+
+if (diffDays <= notifyDays && !localStorage.getItem(notifyKey)) {
+
+ sendExpiryNotification(item.name, diffDays);
+
+ localStorage.setItem(notifyKey, "1");
+
+}
+
+li.innerText =
+`${item.name} - ${item.date} (${item.category}) - ${status}`;
     list.appendChild(li);
   });
 }
